@@ -16,6 +16,21 @@ from scipy import stats
 
 os.chdir("/Users/justinchoi/SaberSem 2025 Python")
 
+# shoutout Max Bay 
+def reverse_name(name):
+    parts = name.split(', ')
+    if len(parts) == 1:
+        return name
+    last = parts[0]
+    first_and_suffix = parts[1].split()
+    if len(first_and_suffix) > 1 and first_and_suffix[-1] in ['Jr.', 'Sr.', 'II', 'III', 'IV', '(L)', '(R)']:
+        first = ' '.join(first_and_suffix[:-1])
+        suffix = first_and_suffix[-1]
+        return f"{first} {last} {suffix}"
+    else:
+        first = ' '.join(first_and_suffix)
+        return f"{first} {last}"
+
 # covariance estimating function
 def estimate_sigma(pitcher_locs, prior_sds): 
     
@@ -112,13 +127,13 @@ strikes = count_dict[count]['strikes']
 def rebuild_bambi(pitch_group): 
     
     swing_mod_formula = '''swing_status['swing'] ~ 1 + (1 | batter_id) + 
-       balls + strikes + plate_x + plate_z''' 
+        balls + strikes + I(plate_x**2)*plat_adv + plate_z + arm_angle*plat_adv ''' 
        
-    contact_mod_formula = '''swing_outcome ~ 1 + (1 | batter_id) + plat_adv + 
-          release_speed + pfx_z + pfx_x + plate_z + plate_x'''
+    contact_mod_formula = '''swing_outcome ~ 1 + (1 | batter_id) + release_speed + 
+        pfx_z + I(pfx_x**2)*plat_adv + plate_z + I(plate_x**2)*plat_adv'''
           
-    bip_mod_formula = '''bbe_outcome ~ 1 + (1 | batter_id) + (1 | pitch_group) + plat_adv + 
-      release_speed + pfx_z + pfx_x + plate_z + plate_x''' 
+    bip_mod_formula = '''bbe_outcome ~ 1 + (1 | batter_id) + (1 | pitch_group) + 
+        release_speed + pfx_z + I(pfx_x**2)*plat_adv + plate_z + I(plate_x**2)*plat_adv''' 
     
     swing_mod = bmb.Model(
         formula = swing_mod_formula, 
@@ -223,10 +238,10 @@ if st.button("Create and Plot Optimal Pitch Target"):
             .loc[pitch_locs['strikes'] == strikes]
             [['plate_x', 'plate_z']]
         )
-        sigma = league.cov() 
+        sigma = league.cov().to_numpy() 
     else: 
         sigma = estimate_sigma(loc_info, prior_std)
-        
+
     # based on step size, generate candidate targets 
     x_seq = np.linspace(-1, 1, num=5)
     z_seq = np.linspace(1.5, 3.5, num=5) 
@@ -253,6 +268,7 @@ if st.button("Create and Plot Optimal Pitch Target"):
             'balls': [balls] * n, 
             'strikes': [strikes] * n, 
             'release_speed': [pitcher_info['mean_velo'].values[0]] * n, 
+            'arm_angle': [pitcher_info['mean_arm_angle'].values[0]] * n, 
             'pfx_x': [pitcher_info['mean_pfx_x'].values[0]] * n, 
             'pfx_z': [pitcher_info['mean_pfx_z'].values[0]] * n, 
             'sz_bot': [batter_info['sz_bot'].values[0]] * n, 
@@ -308,7 +324,7 @@ if st.button("Create and Plot Optimal Pitch Target"):
         hr_val = rv_dict['home_run'][balls][strikes]
         out_val = rv_dict['field_out'][balls][strikes]
         single_val = rv_dict['single'][balls][strikes]
-        triple_val = rv_dict['double'][balls][strikes]
+        triple_val = rv_dict['triple'][balls][strikes]
         
         # probabilities times values 
         take_rv = (1 - swing_prob) * (ball_prob * ball_val + cs_prob * cs_val + hbp_prob * hbp_val)
@@ -348,31 +364,53 @@ if st.button("Create and Plot Optimal Pitch Target"):
     fig, ax = plt.subplots(figsize=(8,8)) 
     
     # limits and labels 
-    ax.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+    pitcher = reverse_name(pitcher)
+    batter = reverse_name(batter) 
+
     ax.set_xlim(-2, 2)
     ax.set_ylim(1, 4)
+    ax.set_aspect("equal") 
+    ax.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
     ax.set_xlabel("Horizontal Plate Location ($ft$)", fontsize=10) 
     ax.set_ylabel("Vertical Plate Location ($ft$)", fontsize=10)
-    ax.set_title(f"Predicted RV per 100 (lower is better): {best_rv}")
+    ax.set_title(f"{pitcher} vs. {batter} (2024) | Count: {count}\nPredicted RV per 100 (lower is better): {best_rv}")
     
     # kde of simulated pitch locations 
     sns.kdeplot(x=plot_data[:,0], y=plot_data[:,1], fill=True, 
                 thresh=0, levels=100, cmap="mako", bw_adjust=2)
     
     # add strike zone rectangle 
-    rect = patches.Rectangle(xy=(-1,1.5), width=2, height=2, linewidth=1, edgecolor="white", fill=False)
+    rect = patches.Rectangle(xy=(-0.83,1.5), width=1.6, height=2.1, linewidth=1, edgecolor="white", fill=False)
     ax.add_patch(rect)
     
     # add 'x' marker indicating optimal target 
     plt.plot(best_x, best_z, marker='x', linestyle='None', markersize=20, color='black')
     
     # main title 
-    plt.suptitle("Distribution of Simulated Pitch Locations Given Optimal Target", 
-                 fontsize=15)
+    plt.suptitle(f"Distribution of Simulated {pitch_group} Locations Given Optimal Target", 
+                 fontsize=15, y = 0.90) 
     
-    plt.show()
     st.pyplot(fig)
 
+st.markdown("---") 
 
-
+st.markdown('<h2 style="font-size: 24px;">How does it all work?</h2>', unsafe_allow_html=True) 
+with st.expander("Pull down to expand"): 
+    st.write('''We first estimate the swing probability, foul/contact/whiff probabilities, and single/double/triple/home run/out
+    probabilities of the hitter, using variables such as release speed, pitch movement, and arm angle. The hitter himself 
+    is included as a random effect to account for individual tendencies; moreover, for hitters with small samples, 
+    the random effect component effecitvely "shrinks" them towards the global mean. These estimates are obtained in advance.''')
+    st.text('') 
+    st.write('''When the app is run, we estimate the covariance matrix of the pitcher's pitch locations for the 
+    specified count and pitch type. This covariance matrix represents the pitcher's command: Pitchers with poor command will have 
+    relatively large variance in their locations, whereas pitchers with good command will have relatively small variance.
+    We work under the assumption that for each count and pitch type, pitch locations follow a multivariate normal distribution.
+    We further assume that the prior for a pitch location covariance matrix is a gamma distribution, whose shape is determined by the 
+    curve that emerges when you plot all the league's pitchers' pitch location standard deviations. Essentially, we're saying 
+    that absent any other information, a given pitcher has league-average command for a specific pitch type, thrown in a 
+    specific count.''') 
+    st.text('') 
+    st.write('''To determine the optimal target, we iterate through a list of candidate targets. For each candidate, we simulate
+    pitches using the estimated covariance matrix. Each pitch is assigned a run value via the swing/contact/in-play probabilities 
+    from earlier, and we compute the average. The target with the lowest average run value is deemed optimal.''')
 
