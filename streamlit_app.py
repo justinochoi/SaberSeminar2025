@@ -1,6 +1,7 @@
 
 import joblib 
 import json 
+import catboost 
 import arviz as az 
 import bambi as bmb 
 import numpy as np 
