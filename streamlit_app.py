@@ -103,7 +103,7 @@ called_strike_mod = load_model()
 st.title("Pitch Target Optimizer") 
 st.write("Given a batter-pitcher matchup, count, and pitch type associated with the selected pitcher, this app estimates where that pitcher should aim to maximize his success. The underlying logic is that there shouldn't be one ideal target for every pitcher - your ideal target must take into account how good your command and stuff is, as well as who is currently at the plate.")
 st.text('') 
-st.write("Because the targets are calculated using a Bayesian framework, note that repeated simulations may yield slightly different results. However, the model parameters have been set to ensure that the targets or predicted run values don't wary wildly. It takes approximately 30 seconds to run the app. For more information on how everything is executed, please refer to the section at the bottom.")
+st.write("Because the targets are calculated using a Bayesian framework, note that repeated simulations may yield slightly different results. However, the model parameters have been set to ensure that the targets or predicted run values don't wary wildly. It takes approximately one minute to run the app. For more information on how everything is executed, please refer to the section at the bottom.")
 
 col1, col2 = st.columns(2) 
 
