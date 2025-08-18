@@ -14,8 +14,6 @@ import seaborn as sns
 from collections import defaultdict 
 from scipy import stats 
 
-import pytensor
-pytensor.config.blas__ldflags = '-llapack -lblas -lcblas'
 
 # shoutout Max Bay 
 def reverse_name(name):
