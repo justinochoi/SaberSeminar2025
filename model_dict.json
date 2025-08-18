@@ -1,0 +1,30 @@
+{
+    "FF": {
+        "swing_mod_path": "models/FF/swing_mod_idata.nc",
+        "contact_mod_path": "models/FF/contact_mod_idata.nc"
+    },
+    "SI": {
+        "swing_mod_path": "models/SI/swing_mod_idata.nc",
+        "contact_mod_path": "models/SI/contact_mod_idata.nc"
+    },
+    "FC": {
+        "swing_mod_path": "models/FC/swing_mod_idata.nc",
+        "contact_mod_path": "models/FC/contact_mod_idata.nc"
+    },
+    "SL": {
+        "swing_mod_path": "models/SL/swing_mod_idata.nc",
+        "contact_mod_path": "models/SL/contact_mod_idata.nc"
+    },
+    "ST": {
+        "swing_mod_path": "models/ST/swing_mod_idata.nc",
+        "contact_mod_path": "models/ST/contact_mod_idata.nc"
+    },
+    "CU": {
+        "swing_mod_path": "models/CU/swing_mod_idata.nc",
+        "contact_mod_path": "models/CU/contact_mod_idata.nc"
+    },
+    "CH": {
+        "swing_mod_path": "models/CH/swing_mod_idata.nc",
+        "contact_mod_path": "models/CH/contact_mod_idata.nc"
+    }
+}

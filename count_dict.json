@@ -1,0 +1,50 @@
+{
+    "0-0": {
+        "balls": 0,
+        "strikes": 0
+    },
+    "0-1": {
+        "balls": 0,
+        "strikes": 1
+    },
+    "0-2": {
+        "balls": 0,
+        "strikes": 2
+    },
+    "1-0": {
+        "balls": 1,
+        "strikes": 0
+    },
+    "2-0": {
+        "balls": 2,
+        "strikes": 0
+    },
+    "3-0": {
+        "balls": 3,
+        "strikes": 0
+    },
+    "1-1": {
+        "balls": 1,
+        "strikes": 1
+    },
+    "2-2": {
+        "balls": 2,
+        "strikes": 2
+    },
+    "1-2": {
+        "balls": 1,
+        "strikes": 2
+    },
+    "2-1": {
+        "balls": 2,
+        "strikes": 1
+    },
+    "3-1": {
+        "balls": 3,
+        "strikes": 1
+    },
+    "3-2": {
+        "balls": 3,
+        "strikes": 2
+    }
+}
